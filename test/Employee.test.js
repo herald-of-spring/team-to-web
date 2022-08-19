@@ -1,4 +1,4 @@
-const Employee = require('./Employee');
+const Employee = require('../src/Employee');
 
 describe("Employee class", () => {    //no input validation since covered by inquirer in index.js
   const employee1 = new Employee("John", 1, "john@test.com");
