@@ -10,40 +10,33 @@ const isNumber = async(input) => /^\d+$/.test(input) ? true : "Entry must be a n
 const isEmail = async(input) => (input.split("@").length == 2 && input.split("@")[1].split(".").length == 2) ? true : "Enter a valid email";
 const noSpace = async(input) => input.split(" ").length == 1 ? true : "Entry must not contain spaces.";
 
-const data = await inquirer.prompt([{
-  type: "input",
-  message: "Let's enter the team manager's information. What's the name?",
-  name: "name",
-}, {
-  type: "input",
-  message: "What's the id?",
-  name: "id",
-  validate: isNumber,
-}, {
-  type: "input",
-  message: "What's the email address?",
-  name: "email",
-  validate: isEmail,
-}, {
-  type: "input",
-  message: "What's the office number?",
-  name: "office",
-  validate: isNumber,
-}]);
-var manager = new Manager(data.name, data.id, data.email, data.office);
-
-const mainMenu = async () => {
-  const temp = await inquirer.prompt({
-    type: "list",
-    message: "Team Builder Menu:",
-    name: "action",
-    choices: ["Add Engineer", "Add Intern", "All done!"]
-  })
-  return temp.action;
+async function init() {
+  var data = await inquirer.prompt([{
+    type: "input",
+    message: "Let's enter the team manager's information. What's the name?",
+    name: "name",
+  }, {
+    type: "input",
+    message: "What's the id?",
+    name: "id",
+    validate: isNumber,
+  }, {
+    type: "input",
+    message: "What's the email address?",
+    name: "email",
+    validate: isEmail,
+  }, {
+    type: "input",
+    message: "What's the office number?",
+    name: "office",
+    validate: isNumber,
+  }]);
+  manager = new Manager(data.name, data.id, data.email, data.office);
+  await mainMenu();
 }
 
-const promptEngineer = async () => {
-  return await inquirer.prompt([{
+async function promptEngineer() {
+  var newEng = await inquirer.prompt([{
     type: "input",
     message: "Let's enter the engineer's information. What's the name?",
     name: "name",
@@ -63,10 +56,12 @@ const promptEngineer = async () => {
     name: "github",
     validate: noSpace,
   }])
+  engineers.push(new Engineer(newEng.name, newEng.id, newEng.email, newEng.github));
+  await mainMenu();
 }
 
-const promptIntern = async () => {
-  return await inquirer.prompt([{
+async function promptIntern() {
+  var newInt = await inquirer.prompt([{
     type: "input",
     message: "Let's enter the intern's information. What's the name?",
     name: "name",
@@ -85,40 +80,67 @@ const promptIntern = async () => {
     message: "What's the name of their school?",
     name: "school",
   }])
+  interns.push(new Intern(newInt.name, newInt.id, newInt.email, newInt.school));
+  await mainMenu();
 }
 
-var engineers = []
-var interns = []
-var action = mainMenu();
-while (action != "All done!") {
-  if (action == "Add Engineer") {
-    var newEng = promptEngineer();
-    engineers.push(new Engineer(newEng.name, newEng.id, newEng.email, newEng.github));
+async function mainMenu() {
+  const temp = await inquirer.prompt({
+    type: "list",
+    message: "Team Builder Menu:",
+    name: "action",
+    choices: ["Add Engineer", "Add Intern", "All done!"]
+  })
+  if (temp.action == "Add Engineer") {
+    await promptEngineer();
+  }
+  else if (temp.action == "Add Intern") {
+    await promptIntern();
   }
   else {
-    var newInt = promptIntern();
-    interns.push(new Intern(newInt.name, newInt.id, newInt.email, newInt.school));
+    await buildWebsite();
   }
-  action = mainMenu();
 }
 
-const buildEngineers = async () => {
+async function buildEngineers() {
   var res = "";
   for (e of engineers) {
-    res += ``
+    res += 
+    `<div class="shadow rounded-lg col-3 m-3 p-0 simple-animate">
+      <div class="bg-primary rounded-top" style="opacity: 0.8">
+        <h3><b class="p-3">${e.getName()}</b></h3>
+        <div class="pl-3 pb-2 h5"><i class="fa-solid fa-laptop-code"></i> Engineer</div>
+      </div>
+      <div class="text-dark">
+        <div class="mx-3 mt-2">ID: ${e.getId()}</div>
+        <div class="mx-3 my-1">Email: <a href="mailto:${e.getEmail()}">${e.getEmail()}</a></div>
+        <div class="mx-3 mb-2">GitHub: <a href="https://github.com/${e.getGithub()}">${e.getGithub()}</a></div>
+      </div>
+    </div>\n`
   }
   return res;
 }
 
-const buildInterns = async () => {
+async function buildInterns() {
   var res = "";
   for (i of interns) {
-    res += ``
+    res += 
+    `<div class="shadow rounded-lg col-3 m-3 p-0 simple-animate">
+      <div class="bg-success rounded-top" style="opacity: 0.8">
+        <h3><b class="p-3">${i.getName()}</b></h3>
+        <div class="pl-3 pb-2 h5"><i class="fa-solid fa-graduation-cap"></i> Intern</div>
+      </div>
+      <div class="text-dark">
+        <div class="mx-3 mt-2">ID: ${i.getId()}</div>
+        <div class="mx-3 my-1">Email: <a href="mailto:${i.getEmail()}">${i.getEmail()}</a></div>
+        <div class="mx-3 mb-2">School: ${i.getSchool()}</div>
+      </div>
+    </div>\n`
   }
   return res;
 }
 
-const buildWebsite = async (m, e, i) => {
+async function buildWebsite() {
   fs.writeFile("./dist/index.html", 
   `<!DOCTYPE html>
   <html lang="en">
@@ -140,30 +162,33 @@ const buildWebsite = async (m, e, i) => {
     </style>
     <title>${manager.getName()}'s Team</title>
   </head>
-  <body class="bg-dark text-light">
-    <div class="d-flex min-vh-100 flex-column align-items-center">
-      <div class="card rounded-lg col-3 m-3">
-        <div class="bg-danger" style="opacity: 0.8">
+  <body class="bg-light text-light">
+    <h1 class="text-dark text-center">Meet the Team</h1>
+    <div class="d-flex flex-wrap justify-content-center">
+      <div class="shadow rounded-lg col-3 m-3 p-0 simple-animate">
+        <div class="bg-danger rounded-top" style="opacity: 0.8">
           <h3><b class="p-3">${manager.getName()}</b></h3>
-          <i class="fa-solid fa-briefcase pl-3 h5">Manager</i>
+          <div class="pl-3 pb-2 h5"><i class="fa-solid fa-briefcase"></i> Manager</div>
         </div>
-        <div class"bg-light text-dark">
-          
+        <div class="text-dark">
+          <div class="mx-3 mt-2">ID: ${manager.getId()}</div>
+          <div class="mx-3 my-1">Email: <a href="mailto:${manager.getEmail()}">${manager.getEmail()}</a></div>
+          <div class="mx-3 mb-2">Office Number: ${manager.getOfficeNumber()}</div>
         </div>
       </div>
     </div>
-    <div class="d-flex min-vh-100 flex-column align-items-center">
-      ${buildEngineers()}
+    <div class="d-flex flex-wrap justify-content-center">
+      ${await buildEngineers()}
     </div>
-    <div class="d-flex min-vh-100 flex-column align-items-center">
-      ${buildInterns()}
+    <div class="d-flex flex-wrap justify-content-center">
+      ${await buildInterns()}
     </div>
   </body>
   </html>`, 
   err => err ? console.error(err) : console.log("Webpage created. Check it out under /dist/index.html"));
 }
-buildWebsite(manager, engineers, interns);
 
-<a href="mailto:email">
-<i class="fa-solid fa-graduation-cap"></i>
-<i class="fa-solid fa-laptop-code"></i>
+var manager = undefined;
+var engineers = []
+var interns = []
+init();
