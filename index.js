@@ -10,6 +10,7 @@ const isNumber = async(input) => /^\d+$/.test(input) ? true : "Entry must be a n
 const isEmail = async(input) => (input.split("@").length == 2 && input.split("@")[1].split(".").length == 2) ? true : "Enter a valid email";
 const noSpace = async(input) => input.split(" ").length == 1 ? true : "Entry must not contain spaces.";
 
+//adds manager information
 async function init() {
   var data = await inquirer.prompt([{
     type: "input",
@@ -35,6 +36,7 @@ async function init() {
   await mainMenu();
 }
 
+//prompts engineer, then brings back to menu
 async function promptEngineer() {
   var newEng = await inquirer.prompt([{
     type: "input",
@@ -60,6 +62,7 @@ async function promptEngineer() {
   await mainMenu();
 }
 
+//prompts intern, then brings back to menu
 async function promptIntern() {
   var newInt = await inquirer.prompt([{
     type: "input",
@@ -84,6 +87,7 @@ async function promptIntern() {
   await mainMenu();
 }
 
+//rotating menu
 async function mainMenu() {
   const temp = await inquirer.prompt({
     type: "list",
@@ -102,6 +106,7 @@ async function mainMenu() {
   }
 }
 
+//html formatting for all engineers
 async function buildEngineers() {
   var res = "";
   for (e of engineers) {
@@ -121,6 +126,7 @@ async function buildEngineers() {
   return res;
 }
 
+//html formatting for all interns
 async function buildInterns() {
   var res = "";
   for (i of interns) {
@@ -140,6 +146,7 @@ async function buildInterns() {
   return res;
 }
 
+//html formatting function
 async function buildWebsite() {
   fs.writeFile("./dist/index.html", 
   `<!DOCTYPE html>
